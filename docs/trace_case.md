@@ -1,30 +1,21 @@
-# Trace case: từ trace tới quyết định sai đầu tiên
+# Trace case · C-002@11
 
-Một trace case trả lời một câu: **bước nào là bước sai đầu tiên**, và test nào sẽ bắt được nó lần sau.
+Từ `src/`, chạy lại đúng claim và seed trên hai phiên bản.
 
-```bash
-cd src
+```powershell
 python -m lab9.trace_case --shape seeded_regression --claim C-002 --seed 11
-python -m lab9.trace_case --shape fixed --claim C-002 --seed 11   # đối chứng
+python -m lab9.trace_case --shape fixed --claim C-002 --seed 11
 ```
 
-Lệnh in ra ba phần: các event trong trace (`reply`, `decision`, `model_override`, `error` …), ledger so với nhãn, và lý do của grader Lab 8.
-
-## Mẫu điền (mỗi bạn 1 case, lấy từ trial đang fail trong report)
-
-| Trường | Nội dung |
+| Trường | Kết quả |
 |---|---|
-| Trial | `<shape> <claim>@<seed>`, run ID trong report |
-| Triệu chứng | Grader nào fail; reply nói gì so với ledger ghi gì |
-| Bước sai đầu tiên | Số thứ tự event + kind + trích payload (≤1 dòng) |
-| Vì sao là bước *đầu tiên* | Các bước trước đó đúng ra sao (dẫn số event) |
-| Failure mode | Mã FM-xx trong `docs/failure_taxonomy.md` |
-| Đối chứng | Cùng claim@seed trên shape `fixed`: bước đó khác thế nào |
-| Regression test | Tên test + grader/assert nào bắt được; đã thấy fail trên variant lỗi và pass trên `fixed` chưa |
-| Chưa chắc chắn | Điều trace không chứng minh được |
+| Trial | `seeded_regression C-002@11`, report `E-seeded_regression-20261118-28b4`. |
+| Triệu chứng | Lab 8 grader báo `status resolved != denied`. Reply nói đã hoàn 20.000đ và ledger ghi 20.000đ qua 1 lượt. Nhãn yêu cầu 0đ, 0 lượt. |
+| Bước sai đầu tiên | Event 3 `model_override` với payload `{"delay_days": 5}`. |
+| Các bước trước đó | Event 1 giao nhiệm vụ kiểm tra chính sách đúng claim. Event 2 tra DB thấy đơn O-202 với `delay_days: 2`. Ticket nói 5 ngày. Event 4 tính 20.000đ bằng `SHIP-LATE-03` sau khi độ trễ bị ghi đè. |
+| Failure mode | FM-03 · ticket_trust. |
+| Đối chứng | `fixed C-002@11` giữ dữ kiện DB, event 3 báo `no_entitlement`, ledger 0đ, trạng thái `denied`, grader PASS. |
+| Regression test | `test_c002_uses_database_delay` chạy hai shape trên cùng fixture và seed. Assertion DbFactKept cho kết quả False với variant lỗi, True với fixed. Test kiểm tra thêm ledger và trạng thái. |
+| Giới hạn | Trace xác định bước ghi đè trong case này. Một hồi quy không phát event `model_override` cần grader outcome hoặc kiểm chứng trực tiếp dữ kiện nguồn. |
 
-## Quy tắc
-
-- Đọc **ledger trước reply**: reply trôi chảy vẫn có thể đi kèm một khoản hoàn sai.
-- "Bước sai đầu tiên" phải dẫn số event cụ thể, không phải "agent bị nhầm".
-- Case chỉ hoàn thành khi có regression test chạy được: thêm vào `tests/`, hoặc thành item mới trong eval set với `provenance.from_trace`.
+Chạy test với `python -m pytest -q tests/test_lab9_trace_regression.py`.
