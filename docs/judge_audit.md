@@ -1,17 +1,18 @@
 # Judge audit
 
-Chạy: `python -m lab9.judge --csv <file> --audit 5`
+| Tiêu chí | n | κ | Precision | Recall | Quan sát FAIL → Rogan–Gladen | Quyết định |
+|---|---:|---:|---:|---:|---:|---|
+| tone_ok | 100 | 0,757 | 0,857 | 0,800 | 0,28 → 0,30 | Đạt ngưỡng cho tone |
+| helpful | 100 | 0,375 | 1,000 | 0,300 | 0,09 → 0,30 | Loại khỏi gate |
 
-| Tiêu chí | n | κ | Precision | Recall | Đạt FLOORS (κ≥0.6, P≥0.8, R≥0.7)? | Quyết định |
-|---|---|---|---|---|---|---|
-| tone_ok | | | | | | dùng / loại |
-| helpful | | | | | | dùng / loại |
+Ngưỡng áp dụng là κ ≥ 0,6, precision ≥ 0,8, recall ≥ 0,7. Lớp dương là FAIL. Ma trận tone có TP 24, FP 4, FN 6, TN 66. Ma trận helpful có TP 9, FP 0, FN 21, TN 70. Helpful bỏ sót 21 trong 30 lỗi, và hiệu chỉnh tỉ lệ lỗi toàn tập vẫn không khắc phục được quyết định trên từng case.
 
-## ≥5 case audit thủ công
-| # | Case | Judge nói | Người nói | Ai đúng? | Ghi chú |
-|---|---|---|---|---|---|
-| 1 | | | | | |
+| Case | Judge | Người | Ai đúng | Sửa rubric |
+|---|---|---|---|---|
+| H-008 | PASS | FAIL | Người | Yêu cầu xưng hô chuyên nghiệp với khách. Thêm ví dụ về cụm “rồi nha, anh check giúp em” quá suồng sã. |
+| H-017 | PASS | FAIL | Người | Khi không có cách xưng hô đã được thiết lập, dùng “anh/chị”. Đánh giá cả lời gọi “bạn ơi” và tiểu từ “nha”. |
+| H-029 | PASS | FAIL | Người | Đánh giá toàn bộ câu. Phạt mệnh lệnh làm khách ngại hỏi tiếp như “không cần nhắn thêm”. |
+| H-042 | FAIL | PASS | Người | Cho qua phản hồi ngắn, lịch sự, có số tiền và thời hạn. Chỉ yêu cầu xin lỗi khi tình huống có căn cứ. |
+| H-051 | FAIL | PASS | Người | Cho phép thuật ngữ nghiệp vụ “refund” theo quy ước LogiX nếu cả câu vẫn rõ ràng và lịch sự. |
 
-## Kết luận
-- Tiêu chí bị loại và lý do (dẫn ma trận nhầm lẫn).
-- Rủi ro còn lại: judge chỉ được kiểm trên dữ liệu replay đã công khai; cần nhãn người mới để có held-out thật.
+Tone được dùng cho tiêu chí văn phong trên replay. Các quyết định về tiền và approval dùng grader code. Cần dữ liệu gán nhãn độc lập để kiểm tra rubric đã sửa ngoài tập công khai.
